@@ -1,11 +1,9 @@
 """FastAPI entry point and application lifespan for the interview backend."""
 from contextlib import asynccontextmanager
-from pathlib import Path
 import logging
 from fastapi import FastAPI,Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import FileResponse,JSONResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException
 from pydantic import ValidationError
@@ -19,7 +17,6 @@ from app.llm.deepseek import DeepSeekProvider
 from app.llm.demo import DemoProvider
 from app.services.common import ServiceError,uid
 
-WEB=Path(__file__).parent/'web'
 logger=logging.getLogger(__name__)
 
 def create_app(settings=None,provider=None):
@@ -90,10 +87,6 @@ def create_app(settings=None,provider=None):
         return {'code':0,'message':'ok','data':{'status':'ok' if database_ok else 'degraded','provider':request.app.state.provider.name,
                 'llmConfigured':request.app.state.provider.name=='demo' or bool(settings.deepseek_api_key),'registrationEnabled':settings.registration_enabled},'requestId':request.state.request_id}
 
-    if WEB.is_dir():
-        application.mount('/assets',StaticFiles(directory=WEB),name='assets')
-        @application.get('/',include_in_schema=False)
-        def home(): return FileResponse(WEB/'index.html')
     return application
 
 app=create_app()

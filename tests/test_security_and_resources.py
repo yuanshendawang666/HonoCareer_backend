@@ -77,7 +77,7 @@ def test_memory_and_weak_points_are_linked_and_deletable(client,auth):
     for table in ('messages','responses','reports','weak_points','memories'):
         assert client.app.state.db.one(f'SELECT COUNT(*) AS n FROM {table} WHERE session_id=?',(s,))['n']==0
 
-def test_openapi_references_and_ui(client):
+def test_openapi_references_and_error_envelope(client):
     schema=client.get('/openapi.json').json()
     assert '/api/v1/sessions' in schema['paths']
     def check(obj):
@@ -91,8 +91,5 @@ def test_openapi_references_and_ui(client):
     check(schema)
     events_schema=schema['paths']['/api/v1/sessions/{session_id}/responses/{response_id}/events']['get']['responses']['200']['content']
     assert 'text/event-stream' in events_schema and 'application/json' not in events_schema
-    assert client.get('/').status_code==200
-    assert '面试训练台' in client.get('/').text
-    assert client.get('/assets/app.js').status_code==200
     response=client.get('/api/v1/does-not-exist')
     assert response.status_code==404 and response.json()['requestId']==response.headers['x-request-id']
