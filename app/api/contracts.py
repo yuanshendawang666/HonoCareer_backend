@@ -37,6 +37,10 @@ class LoginDTO(Contract):
 class RefreshDTO(Contract):
     refreshToken: Annotated[str, Field(min_length=20, max_length=256)]
 
+class ChangePasswordDTO(Contract):
+    oldPassword: Annotated[str, StringConstraints(strip_whitespace=False), Field(min_length=1, max_length=128)]
+    newPassword: Password
+
 class NonEmptyPatch(Contract):
     @model_validator(mode='after')
     def not_empty(self):

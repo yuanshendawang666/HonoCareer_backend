@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request
 from app.api.common import User,ok
-from app.api.contracts import R,RegisterDTO,RegisterVO,LoginDTO,RefreshDTO,TokensVO
+from app.api.contracts import R,RegisterDTO,RegisterVO,LoginDTO,RefreshDTO,ChangePasswordDTO,TokensVO
 from app.services import auth
 
 router=APIRouter(prefix='/auth',tags=['账号'])
@@ -20,4 +20,9 @@ def refresh(body:RefreshDTO,request:Request):
 @router.post('/logout',response_model=R[None])
 def logout(request:Request,user:User):
     auth.logout(request.app.state.db,user)
+    return ok(request)
+
+@router.post('/change-password',response_model=R[None])
+def change_password(request:Request,body:ChangePasswordDTO,user:User):
+    auth.change_password(request.app.state.db,user,body.oldPassword,body.newPassword)
     return ok(request)

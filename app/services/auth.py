@@ -75,3 +75,15 @@ def authenticate(database, settings, token):
 def logout(database, user):
     with database.transaction() as db:
         db.execute('UPDATE auth_sessions SET revoked=1 WHERE id=?',(user['auth_id'],))
+
+def change_password(database, user, old_password, new_password):
+    if old_password == new_password:
+        raise ServiceError(400, 'PASSWORD_UNCHANGED', '新密码不能与原密码相同')
+    with database.transaction() as db:
+        row = db.execute('SELECT password_hash FROM users WHERE id=?', (user['id'],)).fetchone()
+        if row is None:
+            raise ServiceError(404, 'NOT_FOUND', '账号不存在')
+        if not verify_password(old_password, row['password_hash']):
+            raise ServiceError(400, 'OLD_PASSWORD_WRONG', '原密码错误')
+        db.execute('UPDATE users SET password_hash=? WHERE id=?', (hash_password(new_password), user['id']))
+        db.execute('UPDATE auth_sessions SET revoked=1 WHERE user_id=?', (user['id'],))
